@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import * as jwt from "../../shared/utils/jwt.js";
 import { UserModel } from "./user_model.js";
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
@@ -14,7 +14,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             return res.status(401).json({ message: 'No token provided' });
         }
 
-        const decoded = jwt.verify(token, process.env['JWT_SECRET']!) as { userId: string };
+        const decoded = jwt.verifyAccessToken(token) as { userId: string };
         const user = await UserModel.findById(decoded.userId);
 
         if (!user) {

@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import authRoutes from './modules/auth/auth_routes.js';
+import authRoutes from './modules/auth/routes.js';
+import gasStationsRoutes from './modules/gas-stations/routes.js';
+import { startGasStationsJob } from './jobs/gas_station_job.js';
 
 export const app = express();
 
@@ -10,6 +12,10 @@ app.use(express.json());
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/gas-stations', gasStationsRoutes);
+
+// Jobs
+startGasStationsJob();
 
 // 404 handler
 app.use((_, res) => {

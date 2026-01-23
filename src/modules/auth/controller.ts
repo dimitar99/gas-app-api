@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import * as service from "./auth_service.js";
+import * as service from "./service.js";
 
 export const register = async (req: Request, res: Response) => {
     try {
@@ -43,9 +43,7 @@ export const login = async (req: Request, res: Response) => {
         }
 
         try {
-            console.debug('pepe')
             const tokens = await service.login(email, password);
-            console.debug(tokens);
             return res.json(tokens);
         } catch (error) {
             console.error('❌ Error logging in', error);
@@ -69,10 +67,35 @@ export const refresh = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Refresh token is required' });
         }
 
-        const tokens = await service.refresh(refreshToken);
-        return res.json(tokens);
+        try {
+            const tokens = await service.refresh(refreshToken);
+            return res.json(tokens);
+        } catch (error) {
+            console.error('❌ Error verifying refresh token', error);
+            return res.status(400).json({ message: 'Invalid refresh token' });
+        }
     } catch (error) {
         console.error('❌ Error refreshing token', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+export const logout = async (req: Request, res: Response) => {
+    try {
+        if (!req.body) {
+            return res.status(400).json({ message: 'No request body' });
+        }
+
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Refresh token is required' });
+        }
+
+        await service.logout(refreshToken);
+        return res.json({ message: 'Logged out' });
+    } catch (error) {
+        console.error('❌ Error logging out', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 }

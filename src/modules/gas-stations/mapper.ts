@@ -1,28 +1,38 @@
-export const mapExternalToGasStation = (raw: any) => {
-    const lat = parseFloat(raw['Latitud']?.replace(',', '.'));
-    const lng = parseFloat(
-        raw['Longitud (WGS84)']?.replace(',', '.')
-    );
+import { Double } from 'mongodb';
 
-    if (isNaN(lat) || isNaN(lng)) {
+export const mapExternalToGasStation = (raw: any) => {
+    const parseToNumber = (value: any) => {
+        if (value === undefined || value === null || value === '') return undefined;
+        // Convert to string to handle 'int' or 'number' types that don't have .replace
+        const normalized = String(value).replace(',', '.');
+        const num = parseFloat(normalized);
+        return isNaN(num) ? undefined : num;
+    };
+
+    const parseToMongoDouble = (value: any) => {
+        const num = parseToNumber(value);
+        return num !== undefined ? new Double(num) : undefined;
+    };
+
+    const lat = parseToNumber(raw['Latitud']);
+    const lng = parseToNumber(raw['Longitud (WGS84)']);
+
+    if (lat === undefined || lng === undefined) {
         throw new Error('Invalid coordinates');
     }
 
-    const parsePrice = (value: string) =>
-        value ? Number(value.replace(',', '.')) : undefined;
-
     return {
-        name: raw['Rótulo'],
+        name: raw['Rótulo'] ?? 'Gasolinera sin nombre',
         schedule: raw['Horario'],
 
         prices: {
-            gasoline95: parsePrice(raw['Precio Gasolina 95 E5']),
-            gasoline98: parsePrice(raw['Precio Gasolina 98 E5']),
-            dieselA: parsePrice(raw['Precio Gasoleo A']),
-            dieselB: parsePrice(raw['Precio Gasoleo B']),
-            adblue: parsePrice(raw['Precio Adblue']),
-            gnc: parsePrice(raw['Precio Gas Natural Comprimido']),
-            glp: parsePrice(raw['Precio Gas Natural Licuado']),
+            gasoline95: parseToMongoDouble(raw['Precio Gasolina 95 E5']),
+            gasoline98: parseToMongoDouble(raw['Precio Gasolina 98 E5']),
+            dieselA: parseToMongoDouble(raw['Precio Gasoleo A']),
+            dieselB: parseToMongoDouble(raw['Precio Gasoleo B']),
+            adblue: parseToMongoDouble(raw['Precio Adblue']),
+            gnc: parseToMongoDouble(raw['Precio Gas Natural Comprimido']),
+            glp: parseToMongoDouble(raw['Precio Gases licuados del petróleo']),
         },
 
         province: raw['Provincia'],

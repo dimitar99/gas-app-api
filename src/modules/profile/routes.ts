@@ -4,7 +4,6 @@ import { authenticate } from "../auth/middleware.js";
 
 const router = Router();
 
-router.get('/sync', controller.syncGasStationsController);
-router.get('/near-by', authenticate, controller.getNearbyGasStationsController);
+router.put('/', authenticate, controller.updatePreferences);
 
 export default router;

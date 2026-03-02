@@ -4,6 +4,9 @@ import bcrypt from "bcrypt";
 export interface UserDocument extends Document {
     email: string;
     password: string;
+    fuel: string;
+    tankSize: number;
+    searchRadius: number;
     createdAt: Date;
     isActive: boolean;
     comparePassword(password: string): Promise<boolean>;
@@ -20,6 +23,22 @@ const userSchema = new Schema<UserDocument>({
         required: true,
         minlength: 6,
         select: false,
+    },
+    fuel: {
+        type: String,
+        required: true,
+        default: 'gasoline95',
+        enum: ['gasoline95', 'gasoline98', 'dieselA', 'dieselB', 'adblue', 'gnc', 'glp'],
+    },
+    tankSize: {
+        type: Number,
+        required: true,
+        default: 50,
+    },
+    searchRadius: {
+        type: Number,
+        required: true,
+        default: 5,
     },
     createdAt: {
         type: Date,

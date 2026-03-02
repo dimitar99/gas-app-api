@@ -5,7 +5,7 @@ import { UserModel } from "./user_model.js";
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
 
     const auth = req.headers.authorization;
-    if (!auth) return res.sendStatus(401);
+    if (!auth) return res.status(401).json({ message: 'No token provided' });
 
     try {
         const token = auth.split(' ')[1];

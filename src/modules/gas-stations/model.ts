@@ -1,16 +1,17 @@
 import { Schema, model } from 'mongoose';
+import { Double } from 'mongodb';
 
 export interface GasStationDocument {
     name: string;
     schedule: string;
     prices: {
-        gasoline95?: number;
-        gasoline98?: number;
-        dieselA?: number;
-        dieselB?: number;
-        adblue?: number;
-        gnc?: number;
-        glp?: number;
+        gasoline95?: number | Double;
+        gasoline98?: number | Double;
+        dieselA?: number | Double;
+        dieselB?: number | Double;
+        adblue?: number | Double;
+        gnc?: number | Double;
+        glp?: number | Double;
     };
     province: string;
     city: string;

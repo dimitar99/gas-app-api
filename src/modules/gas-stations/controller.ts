@@ -35,6 +35,6 @@ export const getNearbyGasStationsController = async (req: Request, res: Response
 
     } catch (error) {
         console.error('❌ Error getting gas stations', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(404).json({ message: 'No gas stations found' });
     }
 }

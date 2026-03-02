@@ -2,12 +2,32 @@ import { UserModel } from "./user_model.js";
 import * as jwt from "../../shared/utils/jwt.js";
 import { RefreshTokenModel } from "./refresh_token_model.js";
 
-export const register = async (email: string, password: string) => {
+export const register = async (email: string, password: string, fuel: string | null, tankSize: number | null) => {
     const exists = await UserModel.findOne({ email });
     if (exists) throw new Error('Email already used');
 
-    const user = await UserModel.create({ email, password });
-    return user;
+    var map: any = { email, password }
+    if (fuel) map.fuel = fuel;
+    if (tankSize) map.tankSize = tankSize;
+
+    const user = await UserModel.create(map);
+
+    const accessToken = jwt.generateAccessToken({ userId: user.id });
+    const refreshToken = jwt.generateRefreshToken({ userId: user.id });
+
+    await RefreshTokenModel.create({
+        user: user.id,
+        tokenHash: jwt.hashToken(refreshToken),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    const userWithoutPassword = await UserModel.findById(user._id).select('-password');
+
+    return {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        user: userWithoutPassword,
+    };
 }
 
 export const login = async (email: string, password: string) => {
@@ -37,9 +57,12 @@ export const login = async (email: string, password: string) => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
+    const userWithoutPassword = await UserModel.findById(user._id).select('-password');
+
     return {
         accessToken: accessToken,
         refreshToken: refreshToken,
+        user: userWithoutPassword,
     };
 };
 

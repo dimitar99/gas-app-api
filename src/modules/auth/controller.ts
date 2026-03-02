@@ -7,14 +7,23 @@ export const register = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'No request body' });
         }
 
-        const { email, password } = req.body;
+        const { email, password, fuel, tankSize } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({ message: 'Email and password are required' });
         }
 
+        if (fuel && !['gasoline95', 'gasoline98', 'dieselA', 'dieselB', 'adblue', 'gnc', 'glp'].includes(fuel)) {
+            return res.status(400).json({ message: 'Invalid fuel type' });
+        }
+
+        if (tankSize && tankSize < 0) {
+            return res.status(400).json({ message: 'Invalid tank size' });
+        }
+
         try {
-            await service.register(email, password);
+            const resp = await service.register(email, password, fuel, tankSize);
+            return res.status(201).json(resp);
         } catch (error) {
             if (error instanceof Error && error.message === 'Email already used') {
                 return res.status(400).json({ message: 'Email already used' });
@@ -22,8 +31,6 @@ export const register = async (req: Request, res: Response) => {
             console.error('❌ Error registering user', error);
             return res.status(500).json({ message: 'Internal server error' });
         }
-
-        return res.status(201).json({ message: 'User created' });
     } catch (error) {
         console.error('❌ Error registering user', error);
         return res.status(500).json({ message: 'Internal server error' });
@@ -43,12 +50,13 @@ export const login = async (req: Request, res: Response) => {
         }
 
         try {
-            const tokens = await service.login(email, password);
-            return res.json(tokens);
+            const resp = await service.login(email, password);
+            return res.status(200).json(resp);
         } catch (error) {
             console.error('❌ Error logging in', error);
-            return res.status(500).json({ message: 'Token error' });
+            return res.status(400).json({ message: 'Invalid credentials' });
         }
+
     } catch (error) {
         console.error('❌ Error logging in', error);
         return res.status(500).json({ message: 'Internal server error' });
@@ -71,8 +79,8 @@ export const refresh = async (req: Request, res: Response) => {
             const tokens = await service.refresh(refreshToken);
             return res.json(tokens);
         } catch (error) {
-            console.error('❌ Error verifying refresh token', error);
-            return res.status(400).json({ message: 'Invalid refresh token' });
+            console.error('❌ Error verifying refresh token - Invalid refresh token', error);
+            return res.status(401).json({ message: 'Invalid refresh token' });
         }
     } catch (error) {
         console.error('❌ Error refreshing token', error);
@@ -92,8 +100,13 @@ export const logout = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Refresh token is required' });
         }
 
-        await service.logout(refreshToken);
-        return res.json({ message: 'Logged out' });
+        try {
+            await service.logout(refreshToken);
+            return res.json({ message: 'Logged out' });
+        } catch (error) {
+            console.error('❌ Error logging out - Invalid refresh token', error);
+            return res.status(400).json({ message: 'Invalid refresh token' });
+        }
     } catch (error) {
         console.error('❌ Error logging out', error);
         return res.status(500).json({ message: 'Internal server error' });

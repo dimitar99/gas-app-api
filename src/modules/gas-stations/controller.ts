@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { syncGasStations } from "./service.js";
 import { getNearbyGasStations } from "./service.js";
+import type { GasStationDocument } from "./model.js";
 
 export const syncGasStationsController = async (_req: Request, res: Response) => {
     try {
@@ -31,7 +32,20 @@ export const getNearbyGasStationsController = async (req: Request, res: Response
             return res.status(404).json({ message: 'No gas stations found' });
         }
 
-        return res.json(gasStations);
+        const user = req.user;
+
+        if (!user?.fuel) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const fuelType = user.fuel as keyof GasStationDocument['prices'];
+        const sortedByPrice = gasStations.sort((a, b) => {
+            const priceA = Number(a.prices[fuelType]) || Infinity;
+            const priceB = Number(b.prices[fuelType]) || Infinity;
+            return priceA - priceB;
+        });
+
+        return res.json(sortedByPrice);
 
     } catch (error) {
         console.error('❌ Error getting gas stations', error);

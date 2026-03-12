@@ -18,6 +18,7 @@ export const register = async (email: string, password: string, fuel: string | n
     await RefreshTokenModel.create({
         user: user.id,
         tokenHash: jwt.hashToken(refreshToken),
+        // 7 days
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
@@ -26,6 +27,10 @@ export const register = async (email: string, password: string, fuel: string | n
     return {
         accessToken: accessToken,
         refreshToken: refreshToken,
+        // 1 hour
+        "expires_in": 3600,
+        // 7 days
+        "refresh_expires_in": 604800,
         user: userWithoutPassword,
     };
 }
@@ -62,6 +67,10 @@ export const login = async (email: string, password: string) => {
     return {
         accessToken: accessToken,
         refreshToken: refreshToken,
+        // 1 hour
+        "expires_in": 3600,
+        // 7 days
+        "refresh_expires_in": 604800,
         user: userWithoutPassword,
     };
 };
@@ -90,6 +99,10 @@ export const refresh = async (refreshToken: string) => {
     return {
         accessToken: accessToken,
         refreshToken: newRefreshToken,
+        // 1 hour
+        "expires_in": 3600,
+        // 7 days
+        "refresh_expires_in": 604800,
     };
 };
 
